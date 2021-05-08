@@ -108,25 +108,29 @@ done
 
 if [[ $firmware =~ (redmi-ac2100|phicomm-k2p|newifi-d2|k2p-32m-usb|XY-C5|xiaomi-r3p) ]]; then
 		git clone -b master --depth 1 https://github.com/x-wrt/x-wrt openwrt
-		svn co https://github.com/garypang13/Actions-OpenWrt/trunk/devices openwrt/devices
 		cd openwrt
 		wget -cO sdk.tar.xz https://mirrors.cloud.tencent.com/openwrt/releases/21.02-SNAPSHOT/targets/ramips/mt7621/openwrt-sdk-21.02-SNAPSHOT-ramips-mt7621_gcc-8.4.0_musl.Linux-x86_64.tar.xz
 elif [[ $firmware =~ (nanopi-r2s|nanopi-r4s) ]]; then
 		git clone -b openwrt-21.02 --depth 1 https://github.com/openwrt/openwrt
-		svn co https://github.com/garypang13/Actions-OpenWrt/trunk/devices openwrt/devices
 		cd openwrt
 		wget -cO sdk.tar.xz https://mirrors.cloud.tencent.com/openwrt/releases/21.02-SNAPSHOT/targets/rockchip/armv8/openwrt-sdk-21.02-SNAPSHOT-rockchip-armv8_gcc-8.4.0_musl.Linux-x86_64.tar.xz
 elif [[ $firmware == "x86_64" ]]; then
 		git clone -b openwrt-21.02 --depth 1 https://github.com/openwrt/openwrt
-		svn co https://github.com/garypang13/Actions-OpenWrt/trunk/devices openwrt/devices
 		cd openwrt
 		wget -cO sdk.tar.xz https://mirrors.cloud.tencent.com/openwrt/releases/21.02-SNAPSHOT/targets/x86/64/openwrt-sdk-21.02-SNAPSHOT-x86-64_gcc-8.4.0_musl.Linux-x86_64.tar.xz
 fi
 
+cp ../devices ./devices
+if [ -f "../dl" ]; then
+	cp ../dl ./dl
+fi
 
 read -p "请输入后台地址 [回车默认192.168.5.1]: " ip
 ip=${ip:-"192.168.5.1"}
 echo "您的后台地址为: $ip"
+read -p "请输入hostname(also wifi) [回车默认$firmware]: " host
+host=${host:-"$firmware"}
+echo "您的hostname为: $host"
 cp -rf devices/common/* ./
 cp -rf devices/$firmware/* ./
 ./scripts/feeds update -a
@@ -141,6 +145,7 @@ if [ -f "devices/$firmware/diy.sh" ]; then
 fi
 if [ -f "devices/common/default-settings" ]; then
 	sed -i 's/192.168.5.1/$ip/' devices/common/default-settings
+	sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$firmware/g" package/base-files/files/etc/openwrt_release
 	cp -f devices/common/default-settings package/*/*/default-settings/files/uci.defaults
 fi
 if [ -f "devices/$firmware/default-settings" ]; then
