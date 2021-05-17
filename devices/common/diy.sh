@@ -3,8 +3,6 @@
 ./scripts/feeds install -a
 sed -i 's/Os/O2/g' include/target.mk
 sed -i 's?zstd$?zstd ucl upx\n$(curdir)/upx/compile := $(curdir)/ucl/compile?g' tools/Makefile
-echo -e "\q" | svn co https://github.com/immortalwrt/immortalwrt/branches/master/target/linux/generic/hack-5.4 target/linux/generic/hack-5.4
-wget -O target/linux/generic/pending-5.4/601-add-kernel-imq-support.patch https://raw.githubusercontent.com/immortalwrt/immortalwrt/master/target/linux/generic/pending-5.4/601-add-kernel-imq-support.patch
 rm -rf package/network/services/ppp package/libs/libnfnetlink
 svn co https://github.com/openwrt/openwrt/trunk/package/network/services/ppp package/network/services/ppp
 svn co https://github.com/openwrt/openwrt/trunk/package/libs/libnfnetlink package/libs/libnfnetlink
