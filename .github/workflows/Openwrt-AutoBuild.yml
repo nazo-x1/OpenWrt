@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build OpenWrt
+name: Build Lean's OpenWrt
 
 on: 
   repository_dispatch:
@@ -119,7 +119,6 @@ jobs:
         cp -rf devices/${{matrix.target}}/. openwrt/
         cd openwrt
         ./scripts/feeds update -a
-        cd feeds/custom && git pull
 
     - name: Load custom configuration
       run: |
@@ -127,38 +126,23 @@ jobs:
         cd openwrt
         chmod +x devices/common/$DIY_SH
         /bin/bash "devices/common/$DIY_SH"
-        cp -Rf ./diy/* ./
         if [ -f "devices/${{matrix.target}}/$DIY_SH" ]; then
           chmod +x devices/${{matrix.target}}/$DIY_SH
           /bin/bash "devices/${{matrix.target}}/$DIY_SH"
-        fi
-        cp -f devices/common/default-settings package/*/*/default-settings/files/uci.defaults
-        if [ -f "devices/${{matrix.target}}/default-settings" ]; then
-          echo >> package/*/*/default-settings/files/uci.defaults
-          cat devices/${{matrix.target}}/default-settings >> package/*/*/default-settings/files/uci.defaults
         fi
         cp -f devices/common/$CONFIG_FILE .config
         if [ -f "devices/${{matrix.target}}/$CONFIG_FILE" ]; then
           echo >> .config
           cat devices/${{matrix.target}}/$CONFIG_FILE >> .config
         fi
-        sed -i "s/DISTRIB_ID.*/DISTRIB_ID=${{matrix.target}}/g" package/base-files/files/etc/openwrt_release
 
     - name: Apply patches
       run: |
         cd openwrt
-        find "devices/common/patches" -type f ! -path 'devices/common/patches/china_mirrors.patch' -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
         if [ -n "$(ls -A "devices/${{matrix.target}}/patches" 2>/dev/null)" ]; then
           find "devices/${{matrix.target}}/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
         fi
         
-    - name: Default PPPOE Setting
-      if: env.PPPOE_USERNAME && env.PPPOE_PASSWD
-      run: |
-        sed -i '$i uci set network.wan.username=${{ env.PPPOE_USERNAME }}' openwrt/package/*/*/default-settings/files/uci.defaults
-        sed -i '$i uci set network.wan.password=${{ env.PPPOE_PASSWD }}' openwrt/package/*/*/default-settings/files/uci.defaults
-        sed -i '$i uci commit network' openwrt/package/*/*/default-settings/files/uci.defaults
-              
     - name: SSH connection to Actions
       uses: garypang13/debugger-action@master
       if: contains(github.event.action, 'ssh')
