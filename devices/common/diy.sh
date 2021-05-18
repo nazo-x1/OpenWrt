@@ -1,5 +1,7 @@
 #!/bin/bash
 #=================================================
+sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
+./scripts/feeds update -a
 ./scripts/feeds install -a
 sed -i 's/Os/O2/g' include/target.mk
 sed -i 's?zstd$?zstd ucl upx\n$(curdir)/upx/compile := $(curdir)/ucl/compile?g' tools/Makefile
@@ -48,3 +50,25 @@ if [ -f sdk.tar.xz ]; then
 	fi
 	ln -sf /usr/bin/python3 staging_dir/host/bin/python3
 fi
+
+# Modify default IP
+sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
+
+# Modify hostname
+sed -i 's/OpenWrt/Newifi-D2/g' package/base-files/files/bin/config_generate
+
+# Modify the version number
+sed -i "s/OpenWrt /0NAZO0 build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" package/lean/default-settings/files/zzz-default-settings
+
+# Modify default theme
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+
+# Add kernel build user
+[ -z $(grep "CONFIG_KERNEL_BUILD_USER=" .config) ] &&
+    echo 'CONFIG_KERNEL_BUILD_USER="0NAZO0"' >>.config ||
+    sed -i 's@\(CONFIG_KERNEL_BUILD_USER=\).*@\1$"0NAZO0"@' .config
+
+# Add kernel build domain
+[ -z $(grep "CONFIG_KERNEL_BUILD_DOMAIN=" .config) ] &&
+    echo 'CONFIG_KERNEL_BUILD_DOMAIN="GitHub Actions"' >>.config ||
+    sed -i 's@\(CONFIG_KERNEL_BUILD_DOMAIN=\).*@\1$"GitHub Actions"@' .config

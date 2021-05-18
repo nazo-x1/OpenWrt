@@ -224,7 +224,7 @@ jobs:
         echo "Download Link: ${{ env.EMOJI }} $cowurl ${{ env.EMOJI }} 🚀"
  
     - name: Upload firmware to WeTransfer
-      if: env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! contains(github.event.action, 'noup')
+      if: env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! cancelled() && ! contains(github.event.action, 'noup')
       continue-on-error: true
       run: |
         curl -fsSL git.io/file-transfer | sh
