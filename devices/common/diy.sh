@@ -1,6 +1,6 @@
 #!/bin/bash
 #=================================================
-sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
+sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 sed -i 's/Os/O2/g' include/target.mk
