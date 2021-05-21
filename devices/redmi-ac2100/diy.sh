@@ -8,6 +8,11 @@ wget -O include/kernel-version.mk https://raw.githubusercontent.com/coolsnowwolf
 
 # sed -i 's?admin/status/channel_analysis??' package/feeds/luci/luci-mod-status/root/usr/share/luci/menu.d/luci-mod-status.json
 
+echo "src-git small https://github.com/kenzok8/small" >> feeds.conf
+
+./scripts/feeds update -a
+./scripts/feeds install -a
+
 # Modify default IP
 sed -i 's/192.168.1.1/192.168.5.1/g' package/base-files/files/bin/config_generate
 
