@@ -173,7 +173,7 @@ jobs:
         path: openwrt/bin
 
     - name: Organize files
-    if: always()
+      if: always()
       id: organize
       run: |
         mkdir firmware && find openwrt/bin/targets/*/*/ -maxdepth 1 \
