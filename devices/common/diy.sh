@@ -1,6 +1,6 @@
 #!/bin/bash
 #=================================================
-sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf
+# sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf
 
 # Clone community packages to package/community
 mkdir package/community
