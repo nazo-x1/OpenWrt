@@ -13,6 +13,9 @@ echo "src-git small https://github.com/kenzok8/small" >> feeds.conf
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
+sed -i 's,$(STAGING_DIR_HOST)/bin/upx,upx,' package/feeds/small/*/Makefile
+sed -i 's,$(STAGING_DIR_HOST)/bin/upx,upx,' package/community/*/Makefile
+
 # Modify default IP
 sed -i 's/192.168.1.1/192.168.5.1/g' package/base-files/files/bin/config_generate
 
