@@ -137,6 +137,7 @@ date=`date +%m.%d.%Y`
 sed -i "s/# REVISION:=x/REVISION:= $date/g" include/version.mk
 
 if [ -f sdk.tar.xz ]; then
+	sed -i 's,$(STAGING_DIR_HOST)/bin/upx,upx,' package/feeds/community/*/Makefile
 	mkdir sdk
 	tar -xJf sdk.tar.xz -C sdk
 	cp -rf sdk/*/staging_dir/* ./staging_dir/
