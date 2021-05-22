@@ -99,6 +99,8 @@ popd
 
 sed -i 's/Os/O2/g' include/target.mk
 sed -i 's?zstd$?zstd ucl upx\n$(curdir)/upx/compile := $(curdir)/ucl/compile?g' tools/Makefile
+rm -Rf tools/upx && svn co https://github.com/coolsnowwolf/lede/trunk/tools/upx tools/upx
+rm -Rf tools/ucl && svn co https://github.com/coolsnowwolf/lede/trunk/tools/ucl tools/ucl
 
 rm -rf package/network/services/ppp package/libs/libnfnetlink
 svn co https://github.com/openwrt/openwrt/trunk/package/network/services/ppp package/network/services/ppp
