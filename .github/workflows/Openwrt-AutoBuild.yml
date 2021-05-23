@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build OpenWrt
+name: Build Lean's OpenWrt
 
 on: 
   repository_dispatch:
@@ -119,24 +119,26 @@ jobs:
         cp -rf devices/${{matrix.target}}/. openwrt/
         cd openwrt
         ./scripts/feeds update -a
-        cd feeds/custom && git pull
+        # cd feeds/custom && git pull
 
     - name: Load custom configuration
       run: |
         cp -rf devices openwrt/
         cd openwrt
-        chmod +x devices/common/$DIY_SH
-        /bin/bash "devices/common/$DIY_SH"
+        if [ -f "devices/common/$DIY_SH" ]; then
+          chmod +x devices/common/$DIY_SH
+          /bin/bash "devices/common/$DIY_SH"
+        fi
         cp -Rf ./diy/* ./
         if [ -f "devices/${{matrix.target}}/$DIY_SH" ]; then
           chmod +x devices/${{matrix.target}}/$DIY_SH
           /bin/bash "devices/${{matrix.target}}/$DIY_SH"
         fi
-        cp -f devices/common/default-settings package/*/*/default-settings/files/uci.defaults
-        if [ -f "devices/${{matrix.target}}/default-settings" ]; then
-          echo >> package/*/*/default-settings/files/uci.defaults
-          cat devices/${{matrix.target}}/default-settings >> package/*/*/default-settings/files/uci.defaults
-        fi
+        # cp -f devices/common/default-settings package/*/*/default-settings/files/zzz-default-settings
+        # if [ -f "devices/${{matrix.target}}/default-settings" ]; then
+        #   echo >> package/*/*/default-settings/files/zzz-default-settings
+        #   cat devices/${{matrix.target}}/default-settings >> package/*/*/default-settings/files/zzz-default-settings
+        # fi
         cp -f devices/common/$CONFIG_FILE .config
         if [ -f "devices/${{matrix.target}}/$CONFIG_FILE" ]; then
           echo >> .config
@@ -146,17 +148,17 @@ jobs:
     - name: Apply patches
       run: |
         cd openwrt
-        find "devices/common/patches" -type f ! -path 'devices/common/patches/china_mirrors.patch' -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
-        if [ -n "$(ls -A "devices/${{matrix.target}}/patches" 2>/dev/null)" ]; then
-          find "devices/${{matrix.target}}/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
-        fi
+        # find "devices/common/patches" -type f ! -path 'devices/common/patches/china_mirrors.patch' -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
+        # if [ -n "$(ls -A "devices/${{matrix.target}}/patches" 2>/dev/null)" ]; then
+        #   find "devices/${{matrix.target}}/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
+        # fi
         
     - name: Default PPPOE Setting
       if: env.PPPOE_USERNAME && env.PPPOE_PASSWD
       run: |
-        sed -i '$i uci set network.wan.username=${{ env.PPPOE_USERNAME }}' openwrt/package/*/*/default-settings/files/uci.defaults
-        sed -i '$i uci set network.wan.password=${{ env.PPPOE_PASSWD }}' openwrt/package/*/*/default-settings/files/uci.defaults
-        sed -i '$i uci commit network' openwrt/package/*/*/default-settings/files/uci.defaults
+        sed -i '$i uci set network.wan.username=${{ env.PPPOE_USERNAME }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
+        sed -i '$i uci set network.wan.password=${{ env.PPPOE_PASSWD }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
+        sed -i '$i uci commit network' openwrt/package/*/*/default-settings/files/zzz-default-settings
               
     - name: SSH connection to Actions
       uses: garypang13/debugger-action@master
@@ -189,17 +191,23 @@ jobs:
 
     - name: Organize files
       id: organize
+      if: 1 && !cancelled()
       run: |
         mkdir firmware && find openwrt/bin/targets/*/*/ -maxdepth 1 \
         -name "*combined*" \
         -or -name "*sysupgrade*" \
         -or -name "*armvirt-64-default-rootfs*" \
         -or -name "sha256sums" \
+        -or -name "config.*" \
         | xargs -i mv -f {} ./firmware/
-        cp openwrt/.config  ./firmware/${{matrix.target}}.config
+        if [ -f "firmware/config.buildinfo" ]; then
+          mv ./firmware/config.buildinfo ./firmware/${{matrix.target}}.config
+        fi
         cd firmware
         echo ${{ env.date4 }} > version.txt
-        mv sha256sums ${{matrix.target}}_sha256sums
+        if [ -f "firmware/config.buildinfo" ]; then
+          mv sha256sums ${{matrix.target}}_sha256sums
+        fi
         rename -v "s/^openwrt/${{ env.date3 }}-openwrt/" *
         rename -v "s/xiaomi_redmi-router/redmi/" *bin
         rename -v "s/(d-team_|xiaoyu_)//" *bin
@@ -238,7 +246,7 @@ jobs:
         echo "Download Link: ${{ env.EMOJI }} $cowurl ${{ env.EMOJI }} 🚀"
  
     - name: Upload firmware to WeTransfer
-      if: env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! contains(github.event.action, 'noup')
+      if: env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! contains(github.event.action, 'noup') && !cancelled()
       continue-on-error: true
       run: |
         curl -fsSL git.io/file-transfer | sh
@@ -305,3 +313,4 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        

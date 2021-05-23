@@ -18,8 +18,8 @@ echo
 
 clear
 
-rm -Rf openwrt/common openwrt/files openwrt/devices
-svn co https://github.com/garypang13/Actions-OpenWrt/trunk/devices openwrt/devices
+rm -Rf openwrt/common openwrt/files openwrt/devices common/files
+cp ../devices/ ./devices/
 cd openwrt
 
 git checkout .
@@ -50,9 +50,12 @@ fi
 
 echo
 
-read -p "请输入后台地址 [回车默认10.0.0.1]: " ip
-ip=${ip:-"10.0.0.1"}
+read -p "请输入后台地址 [回车默认192.168.5.1]: " ip
+ip=${ip:-"192.168.5.1"}
 echo "您的后台地址为: $ip"
+read -p "请输入hostname(also wifi) [回车默认$firmware]: " host
+host=${host:-"$firmware"}
+echo "您的hostname为: $host"
 
 rm -Rf feeds package/feeds common files diy tmp
 make clean
@@ -71,6 +74,7 @@ if [ -f "devices/$firmware/diy.sh" ]; then
 fi
 if [ -f "devices/common/default-settings" ]; then
 	sed -i 's/10.0.0.1/$ip/' devices/common/default-settings
+	sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$host/g" package/base-files/files/etc/openwrt_release
 	cp -f devices/common/default-settings package/*/*/default-settings/files/uci.defaults
 fi
 if [ -f "devices/$firmware/default-settings" ]; then
@@ -115,7 +119,7 @@ echo
 echo
 sleep 3s
 
-sed -i 's,$(STAGING_DIR_HOST)/bin/upx,upx,' package/feeds/custom/*/Makefile
+# sed -i 's,$(STAGING_DIR_HOST)/bin/upx,upx,' package/feeds/custom/*/Makefile
 
 make -j$(($(nproc)+1)) download v=s ; make -j$(($(nproc)+1)) || make -j1 V=s
 

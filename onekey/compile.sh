@@ -123,10 +123,18 @@ elif [[ $firmware == "x86_64" ]]; then
 		wget -cO sdk.tar.xz https://mirrors.cloud.tencent.com/openwrt/releases/21.02-SNAPSHOT/targets/x86/64/openwrt-sdk-21.02-SNAPSHOT-x86-64_gcc-8.4.0_musl.Linux-x86_64.tar.xz
 fi
 
+mkdir devices
+cp -Rf ../devices/. ./devices/
+if [ -f "../dl" ]; then
+	cp -Rf ../dl/. ./dl/
+fi
 
-read -p "请输入后台地址 [回车默认10.0.0.1]: " ip
-ip=${ip:-"10.0.0.1"}
+read -p "请输入后台地址 [回车默认192.168.5.1]: " ip
+ip=${ip:-"192.168.5.1"}
 echo "您的后台地址为: $ip"
+read -p "请输入hostname(also wifi) [回车默认$firmware]: " host
+host=${host:-"$firmware"}
+echo "您的hostname为: $host"
 cp -rf devices/common/* ./
 cp -rf devices/$firmware/* ./
 ./scripts/feeds update -a
@@ -141,12 +149,17 @@ if [ -f "devices/$firmware/diy.sh" ]; then
 fi
 if [ -f "devices/common/default-settings" ]; then
 	sed -i 's/10.0.0.1/$ip/' devices/common/default-settings
+	sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$host/g" package/base-files/files/etc/openwrt_release
 	cp -f devices/common/default-settings package/*/*/default-settings/files/uci.defaults
 fi
 if [ -f "devices/$firmware/default-settings" ]; then
 	sed -i 's/10.0.0.1/$ip/' devices/$firmware/default-settings
 	cat -f devices/$firmware/default-settings >> package/*/*/default-settings/files/uci.defaults
 fi
+sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$host/g" package/base-files/files/etc/openwrt_release
+sed -i 's/OpenWrt/$host/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.*.1/$ip/g' package/base-files/files/bin/config_generate
+
 if [ -n "$(ls -A "devices/common/patches" 2>/dev/null)" ]; then
           find "devices/common/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 --forward"
 fi
