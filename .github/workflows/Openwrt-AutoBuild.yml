@@ -191,7 +191,7 @@ jobs:
 
     - name: Organize files
       id: organize
-      if: 1 && !cancelled()
+      continue-on-error: true
       run: |
         mkdir firmware && find openwrt/bin/targets/*/*/ -maxdepth 1 \
         -name "*combined*" \
