@@ -128,9 +128,17 @@ jobs:
           chmod +x devices/common/$DIY_SH
           /bin/bash "devices/common/$DIY_SH"
         fi
+        cp -Rf ./diy/* ./
         if [ -f "devices/${{matrix.target}}/$DIY_SH" ]; then
           chmod +x devices/${{matrix.target}}/$DIY_SH
           /bin/bash "devices/${{matrix.target}}/$DIY_SH"
+        fi
+        if [ -f "devices/${{matrix.target}}/default-settings" ]; then
+          # cp -f devices/common/default-settings package/*/*/default-settings/files/zzz-default-settings
+        fi
+        if [ -f "devices/${{matrix.target}}/default-settings" ]; then
+          # echo >> package/*/*/default-settings/files/zzz-default-settings
+          # cat devices/${{matrix.target}}/default-settings >> package/*/*/default-settings/files/zzz-default-settings
         fi
         cp -f devices/common/$CONFIG_FILE .config
         if [ -f "devices/${{matrix.target}}/$CONFIG_FILE" ]; then
@@ -141,10 +149,18 @@ jobs:
     - name: Apply patches
       run: |
         cd openwrt
+        # find "devices/common/patches" -type f ! -path 'devices/common/patches/china_mirrors.patch' -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
         if [ -n "$(ls -A "devices/${{matrix.target}}/patches" 2>/dev/null)" ]; then
           find "devices/${{matrix.target}}/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
         fi
         
+    - name: Default PPPOE Setting
+      if: env.PPPOE_USERNAME && env.PPPOE_PASSWD
+      run: |
+        sed -i '$i uci set network.wan.username=${{ env.PPPOE_USERNAME }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
+        sed -i '$i uci set network.wan.password=${{ env.PPPOE_PASSWD }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
+        sed -i '$i uci commit network' openwrt/package/*/*/default-settings/files/zzz-default-settings
+              
     - name: SSH connection to Actions
       uses: garypang13/debugger-action@master
       if: contains(github.event.action, 'ssh')
@@ -231,7 +247,7 @@ jobs:
         echo "Download Link: ${{ env.EMOJI }} $cowurl ${{ env.EMOJI }} 🚀"
  
     - name: Upload firmware to WeTransfer
-      if: env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! cancelled() && ! contains(github.event.action, 'noup')
+      if:  env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! contains(github.event.action, 'noup') && !cancelled()
       continue-on-error: true
       run: |
         curl -fsSL git.io/file-transfer | sh
