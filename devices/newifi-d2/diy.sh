@@ -16,5 +16,8 @@ sed -i 's,$(STAGING_DIR_HOST)/bin/upx,upx,' package/community/*/Makefile
 # Modify default IP
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
 
+# Modify default SSID
+sed -i "s/DISTRIB_ID.*/DISTRIB_ID=Newifi-D2/g" package/base-files/files/etc/openwrt_release
+
 # Modify hostname
 sed -i 's/OpenWrt/Newifi-D2/g' package/base-files/files/bin/config_generate
