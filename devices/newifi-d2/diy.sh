@@ -1,7 +1,6 @@
-find target/linux/ramips/* -maxdepth 0 ! -path '*/patches-5.4' -exec rm -Rf '{}' \;
-echo -e "\q" | svn co https://github.com/coolsnowwolf/lede/trunk/target/linux/ramips target/linux/ramips
-rm -Rf target/linux/ramips/.svn
-echo -e "\q" | svn co https://github.com/coolsnowwolf/lede/trunk/target/linux/ramips/patches-5.4 target/linux/ramips/patches-5.4
+rm -Rf target/linux/{ramips,generic}
+svn co https://github.com/coolsnowwolf/lede/trunk/target/linux/ramips target/linux/ramips
+svn co https://github.com/coolsnowwolf/lede/trunk/target/linux/generic target/linux/generic
 
 # 此阶段对 config 的修改是无效的
 # sed -i "s/CONFIG_PACKAGE_luci-app-nft-qos.*/CONFIG_PACKAGE_luci-app-nft-qos=n/g" .config
