@@ -12,6 +12,10 @@ pushd package/community
 # Add Lienol's Packages
 git clone --depth=1 https://github.com/Lienol/openwrt-package
 rm -rf ../lean/luci-app-kodexplorer
+rm -rf openwrt-package/luci-app-filebrowser
+
+#add filebrowser
+git clone --depth=1 https://github.com/immortalwrt/openwrt-filebrowser
 
 # Add luci-app-vssr <M>
 git clone --depth=1 https://github.com/jerrykuku/lua-maxminddb.git
