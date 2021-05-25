@@ -60,6 +60,7 @@ echo "您的hostname为: $host"
 rm -Rf feeds package/feeds common files diy tmp
 make clean
 [ -f ".config" ] && mv .config .config.bak
+rm -Rf devices/*/{files,patches,default-settings,diy}
 cp -rf devices/common/* ./
 cp -rf devices/$firmware/* ./
 ./scripts/feeds update -a
