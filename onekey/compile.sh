@@ -135,11 +135,11 @@ echo "您的后台地址为: $ip"
 read -p "请输入hostname(also wifi) [回车默认$firmware]: " host
 host=${host:-"$firmware"}
 echo "您的hostname为: $host"
-rm -rf devices/*/{files|patches|default-settings}
+rm -Rf devices/*/{files,patches,default-settings,diy}
 cp -rf devices/common/* ./
 cp -rf devices/$firmware/* ./
 ./scripts/feeds update -a
-# cp -Rf ./diy/* ./
+cp -Rf ./diy/* ./
 if [ -f "devices/common/diy.sh" ]; then
 		chmod +x devices/common/diy.sh
 		/bin/bash "devices/common/diy.sh"
