@@ -106,8 +106,8 @@ case $CHOOSE in
 esac
 done
 
-git clone -b openwrt-21.02 --depth 1 https://github.com/openwrt/openwrt
-svn co https://github.com/garypang13/OpenWrt/trunk/devices openwrt/devices
+git clone -b master --depth 1 https://github.com/coolsnowwolf/lede openwrt
+cp -Rf devices openwrt/devices
 
 if [[ $firmware =~ (redmi-ac2100|phicomm-k2p|newifi-d2|k2p-32m-usb|XY-C5|xiaomi-r3p) ]]; then
 		cd openwrt
@@ -123,8 +123,6 @@ elif [[ $firmware == "Rpi-4B" ]]; then
 		wget -cO sdk.tar.xz https://mirrors.cloud.tencent.com/openwrt/releases/21.02-SNAPSHOT/targets/bcm27xx/bcm2711/openwrt-sdk-21.02-SNAPSHOT-bcm27xx-bcm2711_gcc-8.4.0_musl.Linux-x86_64.tar.xz
 fi
 
-mkdir devices
-cp -Rf ../devices/. ./devices/
 if [ -f "../dl" ]; then
 	cp -Rf ../dl/. ./dl/
 fi
