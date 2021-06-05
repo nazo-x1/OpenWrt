@@ -17,6 +17,9 @@ rm -rf openwrt-package/luci-app-filebrowser
 #add filebrowser
 git clone --depth=1 https://github.com/immortalwrt/openwrt-filebrowser
 
+#add gowebdav
+git clone --depth=1 https://github.com/immortalwrt/openwrt-gowebdav
+
 # Add luci-app-vssr <M>
 git clone --depth=1 https://github.com/jerrykuku/lua-maxminddb.git
 git clone --depth=1 https://github.com/jerrykuku/luci-app-vssr
