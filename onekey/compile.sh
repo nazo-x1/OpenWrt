@@ -106,8 +106,8 @@ case $CHOOSE in
 esac
 done
 
-git clone -b openwrt-21.02 --depth 1 https://github.com/openwrt/openwrt
-svn co https://github.com/garypang13/OpenWrt/trunk/devices openwrt/devices
+git clone -b master --depth 1 https://github.com/coolsnowwolf/lede openwrt
+cp -Rf devices openwrt/devices
 
 if [[ $firmware =~ (redmi-ac2100|phicomm-k2p|newifi-d2|k2p-32m-usb|XY-C5|xiaomi-r3p) ]]; then
 		cd openwrt
@@ -123,10 +123,8 @@ elif [[ $firmware == "Rpi-4B" ]]; then
 		wget -cO sdk.tar.xz https://mirrors.cloud.tencent.com/openwrt/releases/21.02-SNAPSHOT/targets/bcm27xx/bcm2711/openwrt-sdk-21.02-SNAPSHOT-bcm27xx-bcm2711_gcc-8.4.0_musl.Linux-x86_64.tar.xz
 fi
 
-mkdir devices
-cp -Rf ../devices/* ./devices/
 if [ -f "../dl" ]; then
-	cp -Rf ../dl/* ./dl/
+	cp -Rf ../dl/. ./dl/
 fi
 
 read -p "请输入后台地址 [回车默认192.168.5.1]: " ip
@@ -135,6 +133,7 @@ echo "您的后台地址为: $ip"
 read -p "请输入hostname(also wifi) [回车默认$firmware]: " host
 host=${host:-"$firmware"}
 echo "您的hostname为: $host"
+rm -Rf devices/*/{files,patches,default-settings,diy}
 cp -rf devices/common/* ./
 cp -rf devices/$firmware/* ./
 ./scripts/feeds update -a
@@ -148,14 +147,18 @@ if [ -f "devices/$firmware/diy.sh" ]; then
 		/bin/bash "devices/$firmware/diy.sh"
 fi
 if [ -f "devices/common/default-settings" ]; then
-	sed -i 's/192.168.5.1/$ip/' devices/common/default-settings
-	sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$firmware/g" package/base-files/files/etc/openwrt_release
+	sed -i 's/10.0.0.1/$ip/' devices/common/default-settings
+	sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$host/g" package/base-files/files/etc/openwrt_release
 	cp -f devices/common/default-settings package/*/*/default-settings/files/uci.defaults
 fi
 if [ -f "devices/$firmware/default-settings" ]; then
-	sed -i 's/192.168.5.1/$ip/' devices/$firmware/default-settings
+	sed -i 's/10.0.0.1/$ip/' devices/$firmware/default-settings
 	cat -f devices/$firmware/default-settings >> package/*/*/default-settings/files/uci.defaults
 fi
+sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$host/g" package/base-files/files/etc/openwrt_release
+sed -i 's/OpenWrt/$host/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.*.1/$ip/g' package/base-files/files/bin/config_generate
+
 if [ -n "$(ls -A "devices/common/patches" 2>/dev/null)" ]; then
           find "devices/common/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 --forward"
 fi
@@ -179,7 +182,7 @@ echo
 echo
 sleep 3s
 
-make -j$(($(nproc)+1)) download -j$(($(nproc)+1)) &
+make -j$(($(nproc)+1)) download -j$(($(nproc)+1))
 make -j$(($(nproc)+1)) || make -j1 V=s
 
 if [ "$?" == "0" ]; then

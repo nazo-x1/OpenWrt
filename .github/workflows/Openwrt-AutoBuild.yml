@@ -121,6 +121,7 @@ jobs:
         cp -rf devices/${{matrix.target}}/. openwrt/
         cd openwrt
         ./scripts/feeds update -a
+        # cd feeds/custom && git pull
 
     - name: Load custom configuration
       run: |
@@ -135,13 +136,11 @@ jobs:
           chmod +x devices/${{matrix.target}}/$DIY_SH
           /bin/bash "devices/${{matrix.target}}/$DIY_SH"
         fi
-        if [ -f "devices/${{matrix.target}}/default-settings" ]; then
-          # cp -f devices/common/default-settings package/*/*/default-settings/files/zzz-default-settings
-        fi
-        if [ -f "devices/${{matrix.target}}/default-settings" ]; then
-          # echo >> package/*/*/default-settings/files/zzz-default-settings
-          # cat devices/${{matrix.target}}/default-settings >> package/*/*/default-settings/files/zzz-default-settings
-        fi
+        # cp -f devices/common/default-settings package/*/*/default-settings/files/zzz-default-settings
+        # if [ -f "devices/${{matrix.target}}/default-settings" ]; then
+        #   echo >> package/*/*/default-settings/files/zzz-default-settings
+        #   cat devices/${{matrix.target}}/default-settings >> package/*/*/default-settings/files/zzz-default-settings
+        # fi
         cp -f devices/common/$CONFIG_FILE .config
         if [ -f "devices/${{matrix.target}}/$CONFIG_FILE" ]; then
           echo >> .config
@@ -152,9 +151,9 @@ jobs:
       run: |
         cd openwrt
         # find "devices/common/patches" -type f ! -path 'devices/common/patches/china_mirrors.patch' -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
-        if [ -n "$(ls -A "devices/${{matrix.target}}/patches" 2>/dev/null)" ]; then
-          find "devices/${{matrix.target}}/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
-        fi
+        # if [ -n "$(ls -A "devices/${{matrix.target}}/patches" 2>/dev/null)" ]; then
+        #   find "devices/${{matrix.target}}/patches" -type f -name '*.patch' -print0 | sort -z | xargs -I % -t -0 -n 1 sh -c "cat '%'  | patch -d './' -p1 -E --forward --no-backup-if-mismatch"
+        # fi
         
     - name: Default PPPOE Setting
       if: env.PPPOE_USERNAME && env.PPPOE_PASSWD
@@ -194,11 +193,12 @@ jobs:
 
     - name: Organize files
       id: organize
-      if: !cancelled()
+      continue-on-error: true
       run: |
         mkdir firmware && find openwrt/bin/targets/*/*/ -maxdepth 1 \
         -name "*combined*" \
         -or -name "*sysupgrade*" \
+        -or -name "config.*" \
         | xargs -i mv -f {} ./firmware/
         if [ -f "firmware/config.buildinfo" ]; then
           mv ./firmware/config.buildinfo ./firmware/${{matrix.target}}.config
@@ -252,7 +252,7 @@ jobs:
         echo "Download Link: ${{ env.EMOJI }} $cowurl ${{ env.EMOJI }} 🚀"
  
     - name: Upload firmware to WeTransfer
-      if:  env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! contains(github.event.action, 'noup') && !cancelled()
+      if: env.UPLOAD_FIRMWARE_TO_WETRANSFER == 'true' && ! contains(github.event.action, 'noup') && !cancelled()
       continue-on-error: true
       run: |
         curl -fsSL git.io/file-transfer | sh
@@ -311,3 +311,4 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        

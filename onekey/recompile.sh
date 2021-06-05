@@ -18,7 +18,7 @@ echo
 
 clear
 
-rm -Rf openwrt/common openwrt/files openwrt/devices
+rm -Rf openwrt/common openwrt/files openwrt/devices common/files
 cp ../devices/ ./devices/
 cd openwrt
 
@@ -60,6 +60,7 @@ echo "您的hostname为: $host"
 rm -Rf feeds package/feeds common files diy tmp
 make clean
 [ -f ".config" ] && mv .config .config.bak
+rm -Rf devices/*/{files,patches,default-settings,diy}
 cp -rf devices/common/* ./
 cp -rf devices/$firmware/* ./
 ./scripts/feeds update -a
@@ -73,12 +74,12 @@ if [ -f "devices/$firmware/diy.sh" ]; then
 		/bin/bash "devices/$firmware/diy.sh"
 fi
 if [ -f "devices/common/default-settings" ]; then
-	sed -i 's/192.168.5.1/$ip/' devices/common/default-settings
-	sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$firmware/g" package/base-files/files/etc/openwrt_release
+	sed -i 's/10.0.0.1/$ip/' devices/common/default-settings
+	sed -i "s/DISTRIB_ID.*/DISTRIB_ID=$host/g" package/base-files/files/etc/openwrt_release
 	cp -f devices/common/default-settings package/*/*/default-settings/files/uci.defaults
 fi
 if [ -f "devices/$firmware/default-settings" ]; then
-	sed -i 's/192.168.5.1/$ip/' devices/$firmware/default-settings
+	sed -i 's/10.0.0.1/$ip/' devices/$firmware/default-settings
 	cat devices/$firmware/default-settings >> package/*/*/default-settings/files/uci.defaults
 fi
 if [ -n "$(ls -A "devices/common/patches" 2>/dev/null)" ]; then
@@ -118,6 +119,8 @@ echo "                      *****5秒后开始编译*****
 echo
 echo
 sleep 3s
+
+# sed -i 's,$(STAGING_DIR_HOST)/bin/upx,upx,' package/feeds/custom/*/Makefile
 
 make -j$(($(nproc)+1)) download v=s ; make -j$(($(nproc)+1)) || make -j1 V=s
 
